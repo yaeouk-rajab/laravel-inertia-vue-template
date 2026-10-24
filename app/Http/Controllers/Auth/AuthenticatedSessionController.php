@@ -29,7 +29,10 @@ use Inertia\Response as InertiaResponse;
  * effect on the first call for a key, so a growing decay on later failed
  * attempts is silently ignored. The facade cannot express per-attempt
  * exponential backoff, only a single fixed window. Tracking the lockout
- * deadline explicitly avoids that trap.
+ * deadline explicitly avoids that trap. The deadline is stored as a Unix
+ * timestamp (an int), never a Carbon object: config/cache.php sets
+ * `serializable_classes` to false, so a serializing store (Redis) would hand
+ * a Carbon back as __PHP_Incomplete_Class and every retry would 500.
  */
 class AuthenticatedSessionController extends Controller
 {
@@ -48,8 +51,8 @@ class AuthenticatedSessionController extends Controller
         $throttleKey = $this->throttleKey($request);
         $lockedUntil = Cache::get("login-lockout:{$throttleKey}");
 
-        if ($lockedUntil !== null && now()->lt($lockedUntil)) {
-            $secondsRemaining = (int) ceil(now()->diffInSeconds($lockedUntil));
+        if (is_int($lockedUntil) && now()->getTimestamp() < $lockedUntil) {
+            $secondsRemaining = max(1, $lockedUntil - now()->getTimestamp());
 
             throw ValidationException::withMessages([
                 'email' => "Too many login attempts. Please try again in {$secondsRemaining} seconds.",
@@ -63,7 +66,7 @@ class AuthenticatedSessionController extends Controller
             // Exponential backoff: each further failed attempt at least
             // doubles the next wait (2s, 4s, 8s, ...), capped at 5 minutes.
             $decaySeconds = min(300, 2 ** $attempts);
-            Cache::put("login-lockout:{$throttleKey}", now()->addSeconds($decaySeconds), now()->addHour());
+            Cache::put("login-lockout:{$throttleKey}", now()->addSeconds($decaySeconds)->getTimestamp(), now()->addHour());
 
             throw ValidationException::withMessages([
                 'email' => 'These credentials do not match our records.',
