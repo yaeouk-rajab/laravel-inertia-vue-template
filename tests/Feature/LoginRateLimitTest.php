@@ -140,3 +140,15 @@ test('the lockout survives a cache store that serializes values', function () {
 
     expect($locked['fields']['email'][0])->toContain('Too many login attempts');
 });
+
+test('a lockout value left in the cache by older code is ignored instead of failing the login', function () {
+    // Before the deadline was stored as an int timestamp it was a Carbon object.
+    // A serializing cache hands that back as __PHP_Incomplete_Class, which must
+    // not turn a login attempt into a 500 for the hour such an entry can linger.
+    $user = User::factory()->create(['password' => bcrypt('correct-password')]);
+    $throttleKey = Str::transliterate(Str::lower($user->email)).'|127.0.0.1';
+
+    Cache::put("login-lockout:{$throttleKey}", new stdClass, now()->addHour());
+
+    $this->postJson('/login', ['email' => $user->email, 'password' => 'correct-password'])->assertOk();
+});

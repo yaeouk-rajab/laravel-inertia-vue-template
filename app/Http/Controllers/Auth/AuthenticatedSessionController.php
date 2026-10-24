@@ -51,7 +51,7 @@ class AuthenticatedSessionController extends Controller
         $throttleKey = $this->throttleKey($request);
         $lockedUntil = Cache::get("login-lockout:{$throttleKey}");
 
-        if ($lockedUntil !== null && now()->getTimestamp() < $lockedUntil) {
+        if (is_int($lockedUntil) && now()->getTimestamp() < $lockedUntil) {
             $secondsRemaining = max(1, $lockedUntil - now()->getTimestamp());
 
             throw ValidationException::withMessages([
