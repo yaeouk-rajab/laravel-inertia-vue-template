@@ -9,6 +9,14 @@ Actions CI with security scanning.
 It carries no domain code. Everything here is infrastructure you would
 otherwise rebuild on day one.
 
+## Screenshots
+
+![Login page](docs/screenshots/login.png)
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+_These images are illustrative mockups rendered from this repository's documented screens and API shapes, not captures of a running build. Regenerate or replace them with real captures once the app is running._
+
 ## What is in it
 
 | Area | Contents |
