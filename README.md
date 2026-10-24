@@ -11,11 +11,15 @@ otherwise rebuild on day one.
 
 ## Screenshots
 
+![Welcome page](docs/screenshots/welcome.png)
+
 ![Login page](docs/screenshots/login.png)
 
-![Dashboard](docs/screenshots/dashboard.png)
+![Login with a rejected password](docs/screenshots/login-error.png)
 
-_These images are illustrative mockups rendered from this repository's documented screens and API shapes, not captures of a running build. Regenerate or replace them with real captures once the app is running._
+![Dashboard after signing in as the seeded admin](docs/screenshots/dashboard.png)
+
+_Real captures from a local run (PHP 8.3, PostgreSQL with the runtime/migrator role split, Redis, seeded admin account), driven with Playwright._
 
 ## What is in it
 
