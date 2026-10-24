@@ -87,7 +87,7 @@ test('a failed attempt locks out the next attempt, and each further failure at l
 
     $this->postJson('/login', ['email' => $user->email, 'password' => 'wrong'])->assertStatus(422);
     expect(Cache::get("login-attempts:{$throttleKey}"))->toBe(1);
-    $firstDecay = now()->diffInSeconds(Cache::get("login-lockout:{$throttleKey}"));
+    $firstDecay = Cache::get("login-lockout:{$throttleKey}") - now()->getTimestamp();
 
     // Immediately retrying with the *correct* password is still rejected by
     // the lockout itself, before credentials are even checked.
@@ -100,10 +100,10 @@ test('a failed attempt locks out the next attempt, and each further failure at l
 
     // Force the first lockout to have expired so the next failure is actually
     // evaluated, then confirm the second lockout window is longer.
-    Cache::put("login-lockout:{$throttleKey}", now()->subSecond(), now()->addHour());
+    Cache::put("login-lockout:{$throttleKey}", now()->subSecond()->getTimestamp(), now()->addHour());
     $this->postJson('/login', ['email' => $user->email, 'password' => 'wrong'])->assertStatus(422);
     expect(Cache::get("login-attempts:{$throttleKey}"))->toBe(2);
-    $secondDecay = now()->diffInSeconds(Cache::get("login-lockout:{$throttleKey}"));
+    $secondDecay = Cache::get("login-lockout:{$throttleKey}") - now()->getTimestamp();
 
     expect($secondDecay)->toBeGreaterThan($firstDecay);
 });
@@ -113,10 +113,30 @@ test('a successful login clears any accumulated rate-limit state', function () {
     $throttleKey = Str::transliterate(Str::lower($user->email)).'|127.0.0.1';
 
     $this->postJson('/login', ['email' => $user->email, 'password' => 'wrong'])->assertStatus(422);
-    Cache::put("login-lockout:{$throttleKey}", now()->subSecond(), now()->addHour());
+    Cache::put("login-lockout:{$throttleKey}", now()->subSecond()->getTimestamp(), now()->addHour());
 
     $this->postJson('/login', ['email' => $user->email, 'password' => 'correct-password'])->assertOk();
 
     expect(Cache::get("login-attempts:{$throttleKey}"))->toBeNull();
     expect(Cache::get("login-lockout:{$throttleKey}"))->toBeNull();
+});
+
+test('the lockout survives a cache store that serializes values', function () {
+    // Redis (the .env.example default) serializes cached values, and
+    // config/cache.php forbids unserializing classes, so a Carbon stored as the
+    // lockout deadline came back as __PHP_Incomplete_Class and the retry 500ed.
+    // The array store only does the same when asked to serialize.
+    config(['cache.stores.array.serialize' => true]);
+    Cache::forgetDriver('array');
+
+    $user = User::factory()->create(['password' => bcrypt('correct-password')]);
+
+    $this->postJson('/login', ['email' => $user->email, 'password' => 'wrong'])->assertStatus(422);
+
+    $locked = $this->postJson('/login', [
+        'email' => $user->email,
+        'password' => 'correct-password',
+    ])->assertStatus(422)->json();
+
+    expect($locked['fields']['email'][0])->toContain('Too many login attempts');
 });
