@@ -7,14 +7,3 @@
 # id = "GHSA-xxxx-xxxx-xxxx"
 # ignoreUntil = 2026-12-31T00:00:00Z
 # reason = "Package X version Y, no upstream fix yet. Only reachable via <path>; <why it does not matter>."
-
-[[IgnoredVulns]]
-id = "GHSA-vfj7-8cjw-p6xm"
-ignoreUntil = 2026-11-09
-reason = """
-braces <= 3.0.3 (stack-exhaustion DoS). Dev/test-tooling dependency only (via
-karma/chokidar/micromatch style toolchains); it is never shipped in the
-runtime artifact. No patched release exists upstream as of 2026-10-10.
-Before the expiry date: check whether a fixed braces release exists; if so,
-update the lockfile and delete this entry, otherwise re-confirm and renew.
-"""
