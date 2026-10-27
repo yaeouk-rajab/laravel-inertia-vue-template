@@ -1,5 +1,5 @@
 # Vite dev server (hot module replacement) for local development.
-FROM node:22-slim
+FROM node:26-slim
 
 WORKDIR /var/www/html
 
