@@ -14,7 +14,7 @@
 # hooks into Pest's lifecycle at boot, so every `pest` run (not only the
 # browser suite) needs them once the package is installed.
 
-FROM php:8.4-cli AS deps
+FROM php:8.5-cli AS deps
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git \

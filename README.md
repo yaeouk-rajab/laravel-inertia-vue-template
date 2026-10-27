@@ -9,6 +9,18 @@ Actions CI with security scanning.
 It carries no domain code. Everything here is infrastructure you would
 otherwise rebuild on day one.
 
+## Screenshots
+
+![Welcome page](docs/screenshots/welcome.png)
+
+![Login page](docs/screenshots/login.png)
+
+![Login with a rejected password](docs/screenshots/login-error.png)
+
+![Dashboard after signing in as the seeded admin](docs/screenshots/dashboard.png)
+
+_Real captures from a local run (PHP 8.3, PostgreSQL with the runtime/migrator role split, Redis, seeded admin account), driven with Playwright._
+
 ## What is in it
 
 | Area | Contents |
