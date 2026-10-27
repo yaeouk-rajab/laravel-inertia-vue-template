@@ -22,7 +22,7 @@ COPY . .
 RUN npm run build
 
 # ---------------------------------------------------------------------------
-FROM php:8.4-fpm AS php-deps
+FROM php:8.5-fpm AS php-deps
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         unzip \
